@@ -1,15 +1,15 @@
 import streamlit as st
 
-from modules.attendance import *
-from modules.charts import *
-
 st.set_page_config(
-    page_title="Registrasi vs Presensi",
+    page_title=" ⚖️ Registrasi dan Presensi",
     layout="wide"
 )
 
-registrasi = st.session_state["registrasi"]
-presensi = st.session_state["presensi"]
+from modules.attendance import *
+from modules.charts import *
+from modules.sidebar import sidebar_webinar
+
+webinars, registrasi, presensi = sidebar_webinar()
 
 hadir, tidak_hadir, attendance = compare_data(
     registrasi,
@@ -20,7 +20,7 @@ jumlah_registrasi, jumlah_presensi, attendance = summary(
     presensi
 )
 
-st.title("🔄 Registrasi vs Presensi")
+st.title("⚖️ Registrasi dan Presensi")
 
 # ==================================================
 # KPI

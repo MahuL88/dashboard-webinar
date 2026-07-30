@@ -5,11 +5,11 @@ from modules.cross import *
 from modules.charts import *
 
 st.set_page_config(
-    page_title="Analisis Lintas Webinar",
+    page_title="Tren Webinar",
     layout="wide"
 )
 
-st.title("📊 Analisis Lintas Webinar")
+st.title("📈 Tren Webinar")
 
 from modules.loader import load_all_webinars
 from modules.preprocess import (
@@ -86,103 +86,51 @@ with c4:
 st.divider()
 
 # ======================================================
-# HERO CHART
+# TREN CHART
 # ======================================================
-
-col1,col2 = st.columns([2.2,1])
-
-with col1:
-
-    st.plotly_chart(
-
-        cross_line_chart(summary),
-
-        use_container_width=True
-
-    )
-
-with col2:
-
-    st.plotly_chart(
-
-        treemap_chart(summary),
-
-        use_container_width=True
-
-    )
+st.plotly_chart(
+    cross_line_chart(summary),
+    use_container_width=True
+)
 
 st.divider()
 
 # ======================================================
-# RANKING + TOP PROVINSI
+# RANKING 
 # ======================================================
 
-col1,col2 = st.columns([1,2])
+st.subheader("🏆 Top 3 Attendance Webinar")
 
-with col1:
+ranking = (
+    summary
+    .sort_values("Attendance Rate", ascending=False)
+    .head(3)
+)
 
-    st.subheader("🏆 Ranking Attendance")
+cols = st.columns(3)
 
-    ranking = summary.sort_values(
-        "Attendance Rate",
-        ascending=False
-    ).head(3)
+medal = ["🥇", "🥈", "🥉"]
 
-    medal = ["🥇","🥈","🥉"]
+for col, (_, row), m in zip(cols, ranking.iterrows(), medal):
 
-    for i,(_,row) in enumerate(ranking.iterrows()):
+    with col:
 
         st.markdown(f"""
-### {medal[i]} {row['Webinar']}
+### {m} {row['Webinar']}
 
-Attendance
+### **{row['Attendance Rate']:.1f}%**
 
-# {row['Attendance Rate']}%
+👥 Registrasi : **{row['Registrasi']}**
 
----
+✅ Presensi : **{row['Presensi']}**
 """)
-
-with col2:
-
-    prov = province_summary(webinars)
-
-    prov = (
-        prov.groupby("Provinsi")
-        ["Registrasi"]
-        .sum()
-        .reset_index()
-        .sort_values(
-            "Registrasi",
-            ascending=False
-        )
-        .head(10)
-    )
-
-    st.plotly_chart(
-
-        bar_chart(
-
-            prov,
-
-            "Provinsi",
-
-            "Top 10 Provinsi",
-
-            palette="blue",
-
-            sort=True
-
-        ),
-
-        use_container_width=True
-
-    )
-
 st.divider()
 
 # ======================================================
 # HEATMAP
 # ======================================================
+
+st.subheader("🧩 Heatmap Registrasi & Presensi")
 
 heat = summary.set_index("Webinar")[
     ["Registrasi","Presensi"]
@@ -202,8 +150,6 @@ fig = px.imshow(
 
 fig.update_layout(
 
-    title="Heatmap Registrasi & Presensi",
-
     height=350
 
 )
@@ -211,22 +157,6 @@ fig.update_layout(
 st.plotly_chart(
 
     fig,
-
-    use_container_width=True
-
-)
-
-st.divider()
-
-# ======================================================
-# TABEL
-# ======================================================
-
-st.subheader("📋 Ringkasan Webinar")
-
-st.dataframe(
-
-    summary,
 
     use_container_width=True
 

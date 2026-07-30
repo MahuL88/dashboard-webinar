@@ -2,8 +2,9 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import json
-import plotly.graph_objects as go
 from pathlib import Path
+from collections import Counter
+import re
 
 # ==========================================================
 # PALETTE
@@ -25,8 +26,6 @@ PALETTES = {
 
 }
 
-TEMPLATE = "plotly_white"
-
 
 # ==========================================================
 # LAYOUT
@@ -38,6 +37,31 @@ def style(fig):
 
         template="plotly_white",
 
+        paper_bgcolor="white",
+        plot_bgcolor="white",
+
+        font=dict(
+            family="Segoe UI",
+            color="#111827"
+        ),
+
+        title=dict(
+            x=0.02,
+            font=dict(
+                size=22,
+                color="#111827"
+            )
+        ),
+
+        legend=dict(
+            font=dict(color="#111827")
+        ),
+
+        hoverlabel=dict(
+            bgcolor="white",
+            font=dict(color="#111827")
+        ),
+
         height=430,
 
         margin=dict(
@@ -45,41 +69,26 @@ def style(fig):
             r=20,
             t=60,
             b=20
-        ),
-
-        title=dict(
-            x=0.02,
-            font=dict(
-                size=22,
-                family="Segoe UI",
-                color="#334155"
-            )
-        ),
-
-        paper_bgcolor="white",
-
-        plot_bgcolor="white",
-
-        font=dict(
-            family="Segoe UI",
-            color="#475569"
-        ),
-
-        legend_title="",
-
-        hoverlabel=dict(
-            bgcolor="white",
-            font_size=13
         )
+
     )
 
     fig.update_xaxes(
 
         showgrid=False,
-
         zeroline=False,
 
-        linecolor="#CBD5E1"
+        linecolor="#CBD5E1",
+
+        tickfont=dict(
+            color="#111827",
+            size=12
+        ),
+
+        title_font=dict(
+            color="#111827"
+        )
+
     )
 
     fig.update_yaxes(
@@ -88,7 +97,17 @@ def style(fig):
 
         zeroline=False,
 
-        linecolor="#CBD5E1"
+        linecolor="#CBD5E1",
+
+        tickfont=dict(
+            color="#111827",
+            size=12
+        ),
+
+        title_font=dict(
+            color="#111827"
+        )
+
     )
 
     return fig
@@ -829,72 +848,6 @@ def gauge_chart(rate):
 
 def attendance_chart(
     df,
-    category,
-    title,
-    palette="blue"
-):
-
-    light, dark = PALETTES[palette]
-
-    data = df.sort_values(
-        "Attendance Rate",
-        ascending=True
-    )
-
-    colors = [light] * len(data)
-
-    idx = data["Attendance Rate"].idxmax()
-
-    colors[data.index.get_loc(idx)] = dark
-
-    fig = px.bar(
-
-        data,
-
-        x="Attendance Rate",
-
-        y=category,
-
-        orientation="h",
-
-        text="Attendance Rate",
-
-        title=title
-
-    )
-
-    fig.update_traces(
-
-        marker_color=colors,
-
-        texttemplate="%{text:.1f}%",
-
-        textposition="outside",
-
-        hovertemplate="<b>%{y}</b><br>%{x:.1f}%<extra></extra>"
-
-    )
-
-    fig.update_xaxes(
-
-        range=[0,100],
-
-        ticksuffix="%"
-
-    )
-
-    fig.update_layout(
-
-        xaxis_title="",
-
-        yaxis_title=""
-
-    )
-
-    return style(fig)
-
-def attendance_chart(
-    df,
     y,
     x,
     title,
@@ -906,7 +859,16 @@ def attendance_chart(
     df = df.sort_values(x)
 
     colors = [light] * len(df)
-    colors[df[x].idxmax()] = dark
+    if (df[x] == 100).any():
+        for i, v in enumerate(df[x]):
+            if v == 100:
+                colors[i] = dark
+    # Kalau tidak ada 100%, hanya nilai terbesar yang gelap
+    else:
+        max_value = df[x].max()
+        for i, v in enumerate(df[x]):
+            if v == max_value:
+                colors[i] = dark
 
     fig = px.bar(
         df,
@@ -1044,13 +1006,20 @@ def attendance_webinar_chart(df):
 
     )
 
-    colors = [
+    light = "#DBEAFE"
+    dark = "#2563EB"
 
-        "#DBEAFE"
+    colors = [light] * len(data)
 
-    ] * len(data)
-
-    colors[-1] = "#2563EB"
+    if (data["Attendance Rate"] == 100).any():
+        for i, v in enumerate(data["Attendance Rate"]):
+            if v == 100:
+                colors[i] = dark
+    else:
+        max_value = data["Attendance Rate"].max()
+        for i, v in enumerate(data["Attendance Rate"]):
+            if v == max_value:
+                colors[i] = dark
 
     fig = px.bar(
 
@@ -1091,66 +1060,6 @@ def attendance_webinar_chart(df):
 # ==========================================================
 # TREEMAP
 # ==========================================================
-def treemap_chart(summary):
-
-    fig = px.treemap(
-
-        summary,
-
-        path=["Webinar"],
-
-        values="Registrasi",
-
-        color="Attendance Rate",
-
-        color_continuous_scale="Blues",
-
-        custom_data=[
-
-            summary["Registrasi"],
-
-            summary["Presensi"],
-
-            summary["Attendance Rate"]
-
-        ]
-
-    )
-
-    fig.update_traces(
-
-        hovertemplate=
-
-        "<b>%{label}</b><br>"
-
-        "Registrasi : %{customdata[0]}<br>"
-
-        "Presensi : %{customdata[1]}<br>"
-
-        "Attendance : %{customdata[2]}%<extra></extra>"
-
-    )
-
-    fig.update_layout(
-
-        margin=dict(
-
-            l=10,
-
-            r=10,
-
-            t=50,
-
-            b=10
-
-        ),
-
-        height=430
-
-    )
-
-    return fig
-
 def treemap_chart(df):
 
     fig = px.treemap(
@@ -1253,7 +1162,7 @@ def comparison_bar_chart(
 
 import streamlit as st
 
-def metric_card(title,value,icon,color):
+def metric_card(title, value, icon, color):
 
     st.markdown(f"""
 <div style="
@@ -1277,6 +1186,7 @@ font-weight:600;
 font-size:38px;
 font-weight:700;
 margin-top:10px;
+color:#111827;
 ">
 
 {value}
@@ -1284,7 +1194,7 @@ margin-top:10px;
 </div>
 
 </div>
-""",unsafe_allow_html=True)
+""", unsafe_allow_html=True)
     
 def cross_line_chart(summary):
 
@@ -1350,3 +1260,53 @@ def cross_line_chart(summary):
 
     return style(fig)
 
+STOPWORDS = {
+    "dan","yang","di","ke","dengan","untuk",
+    "agar","semoga","lebih","sudah","sangat",
+    "terima","kasih","nya","ya","yg","akan",
+    "bisa","ada","tidak","lagi","dapat","saya"
+    "dari","ini","itu","karena","atau","pada"
+}
+
+def top_words(df, column, top_n=15):
+
+    text = " ".join(
+        df[column]
+        .fillna("")
+        .astype(str)
+        .str.lower()
+    )
+
+    words = re.findall(r"[a-zA-ZÀ-ÿ]+", text)
+
+    words = [
+        w for w in words
+        if len(w) > 2
+        and w not in STOPWORDS
+    ]
+
+    counter = Counter(words)
+
+    return pd.DataFrame(
+        counter.most_common(top_n),
+        columns=["Kata", "Jumlah"]
+    )
+
+def top_words_chart(df, column):
+
+    data = top_words(df, column)
+
+    fig = px.bar(
+        data,
+        x="Jumlah",
+        y="Kata",
+        orientation="h",
+        text="Jumlah"
+    )
+
+    fig.update_layout(
+        yaxis=dict(autorange="reversed"),
+        title="Top 15 Kata"
+    )
+
+    return style(fig)

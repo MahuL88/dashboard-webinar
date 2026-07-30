@@ -1,21 +1,17 @@
 import streamlit as st
-
 from modules.charts import *
+from modules.sidebar import sidebar_webinar
+
+webinars, registrasi, presensi = sidebar_webinar()
 
 st.set_page_config(
     page_title="Feedback Peserta",
     layout="wide"
 )
 
-presensi = st.session_state.get("presensi")
-
 if presensi is None:
     st.warning("Data presensi belum tersedia.")
     st.stop()
-
-# =====================================================
-# NAMA KOLOM
-# =====================================================
 
 KOLOM_PUAS = "Seberapa puas Anda mengikuti webinar ini?"
 KOLOM_SARAN = "Pesan atau saran untuk kegiatan selanjutnya"

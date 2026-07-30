@@ -1,14 +1,36 @@
 import pandas as pd
+import re
 
 
 def clean_wa(series):
-    return (
+    s = (
         series.astype(str)
         .str.replace(r"\.0$", "", regex=True)
-        .str.replace(" ", "")
+        .str.replace(r"\D", "", regex=True)   
         .str.strip()
     )
 
+    def normalize(x):
+        if pd.isna(x):
+            return ""
+
+        x = str(x).strip()
+
+        if x == "" or x.lower() == "nan":
+            return ""
+
+        if x.startswith("0"):
+            return "62" + x[1:]
+
+        if x.startswith("62"):
+            return x
+
+        if x.startswith("8"):
+            return "62" + x
+
+        return x
+
+    return s.apply(normalize)
 
 def compare_data(registrasi, presensi):
 
@@ -17,6 +39,9 @@ def compare_data(registrasi, presensi):
 
     reg["WA"] = clean_wa(reg["Nomor whatsapp aktif"])
     pre["WA"] = clean_wa(pre["No Whatsapp aktif"])
+
+    reg = reg[reg["WA"] != ""]
+    pre = pre[pre["WA"] != ""]
 
     hadir = reg[reg["WA"].isin(pre["WA"])].copy()
 
@@ -38,6 +63,9 @@ def attendance_by_province(registrasi, presensi):
 
     reg["WA"] = clean_wa(reg["Nomor whatsapp aktif"])
     pre["WA"] = clean_wa(pre["No Whatsapp aktif"])
+
+    reg = reg[reg["WA"] != ""]
+    pre = pre[pre["WA"] != ""]
 
     reg_count = (
         reg.groupby("Provinsi")
@@ -83,6 +111,9 @@ def attendance_by_status(registrasi, presensi):
     reg["WA"] = clean_wa(reg["Nomor whatsapp aktif"])
     pre["WA"] = clean_wa(pre["No Whatsapp aktif"])
 
+    reg = reg[reg["WA"] != ""]
+    pre = pre[pre["WA"] != ""]
+
     reg_count = (
         reg.groupby("Status Peserta")
         .size()
@@ -125,6 +156,9 @@ def summary(registrasi, presensi):
 
     reg["WA"] = clean_wa(reg["Nomor whatsapp aktif"])
     pre["WA"] = clean_wa(pre["No Whatsapp aktif"])
+
+    reg = reg[reg["WA"] != ""]
+    pre = pre[pre["WA"] != ""]
 
     jumlah_registrasi = len(reg)
 

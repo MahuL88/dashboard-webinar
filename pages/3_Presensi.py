@@ -2,13 +2,14 @@ import streamlit as st
 
 from modules.metrics import *
 from modules.charts import *
+from modules.sidebar import sidebar_webinar
+
+webinars, registrasi, presensi = sidebar_webinar()
 
 st.set_page_config(
     page_title="Presensi",
     layout="wide"
 )
-
-presensi = st.session_state["presensi"]
 
 st.title("📝 Dashboard Presensi")
 
@@ -16,7 +17,7 @@ st.title("📝 Dashboard Presensi")
 # KPI
 # =====================================================
 
-col1, col2, col3, col4, col5 = st.columns(5)
+col1, col2, col3, col4 = st.columns(4)
 
 col1.metric(
     "Presensi",
@@ -38,11 +39,6 @@ col4.metric(
     rata_usia(presensi)
 )
 
-col5.metric(
-    "Provinsi",
-    jumlah_provinsi(presensi)
-)
-
 st.divider()
 
 # =====================================================
@@ -61,6 +57,7 @@ st.divider()
 # =====================================================
 # PRESENSI PER HARI
 # =====================================================
+st.subheader("📅 Aktivitas Pendaftaran")
 
 col1, col2 = st.columns(2)
 
@@ -99,6 +96,7 @@ st.divider()
 # =====================================================
 # USIA & JENIS KELAMIN
 # =====================================================
+st.subheader("👥 Demografi Peserta")
 
 col1, col2 = st.columns(2)
 
@@ -138,11 +136,12 @@ st.divider()
 # =====================================================
 # PETA INDONESIA
 # =====================================================
+st.subheader("🗺️ Persebaran Peserta")
 
 fig = map_chart(
     presensi,
     "Provinsi",
-    "Sebaran Peserta"
+    "Sebaran Peserta Berdasarkan Provinsi"
 )
 
 if fig:
@@ -156,6 +155,7 @@ st.divider()
 # =====================================================
 # STATUS & KEPUASAN
 # =====================================================
+st.subheader("📚 Status Peserta dan Sumber Informasi")
 
 col1, col2 = st.columns(2)
 
@@ -200,9 +200,12 @@ st.divider()
 # FEEDBACK
 # =====================================================
 
-if "Pesan atau saran untuk kegiatan selanjutnya" in presensi.columns:
+st.subheader("💬 Feedback Peserta")
 
-    st.subheader("💬 Feedback Peserta")
+fig = top_words_chart(
+    presensi,
+    "Pesan atau saran untuk kegiatan selanjutnya"
+)
 
-    st.info(
-        "WordCloud dan analisis saran akan ditambahkan pada tahap berikutnya.")
+st.plotly_chart(fig, use_container_width=True)
+st.divider()

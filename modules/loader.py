@@ -1,7 +1,7 @@
 from pathlib import Path
 import pandas as pd
 import re
-
+import streamlit as st
 DATA_FOLDER = Path("data")
 
 
@@ -24,7 +24,7 @@ def load_all_webinars():
             webinars[nama_webinar] = {}
 
         df = pd.read_excel(file)
-
+        
         if "registrasi" in filename:
             webinars[nama_webinar]["registrasi"] = df
 
